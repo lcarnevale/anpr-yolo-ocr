@@ -1,6 +1,6 @@
 # License Plate Detection - Microservices
 
-![license-plate-image](docs/license-plate.jpg | width=500)
+![license-plate-image](docs/license-plate.jpg)
 
 **Automatic Number Plate Recognition** (ANPR) is the process of reading the characters on the plate with various **optical character recognition** (OCR) methods by separating the plate region on the vehicle image obtained from automatic plate recognition.
 
