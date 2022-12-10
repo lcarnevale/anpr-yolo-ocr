@@ -32,8 +32,8 @@ chmod +x run.sh
 ./run.sh
 ```
 
-## How to check logs
-Read the log file. The filename is custom and it can be modified in the configuration file.
+## How to read the logs
+The filename is custom and it can be modified in the configuration file.
 ```bash
 tail -f /var/log/lcarnevale/license-plate-detection.log
 ```
