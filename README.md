@@ -1,5 +1,7 @@
 # License Plate Detection - Microservices
 
+<img src="http://images.summitmedia-digital.com/topgear/images/2022/07/22/custom-license-plates-philippines-legal-illegal-1658451453.jpg" alt="license-plate-image" width="500"/>
+
 **Automatic Number Plate Recognition** (ANPR) is the process of reading the characters on the plate with various **optical character recognition** (OCR) methods by separating the plate region on the vehicle image obtained from automatic plate recognition.
 
 This repository forks the [Automatic_Number_Plate_Recognition_YOLO_OCR
