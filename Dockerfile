@@ -21,6 +21,7 @@ COPY requirements.txt /opt/app/requirements.txt
 WORKDIR /opt/app
 
 RUN echo "|--> Install dependencies"; \
+    apt install -y libgl1 libglib2.0-0; \
     pip install -r requirements.txt;
 
 COPY app /opt/app
