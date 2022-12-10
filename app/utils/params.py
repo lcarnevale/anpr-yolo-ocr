@@ -1,8 +1,8 @@
 import torch
 
 class Parameters():
-    def __init__(self):
 
+    def __init__(self, model_path):
         self.weights = 'best.pt'
 
         self.imgsz = 640
@@ -29,4 +29,5 @@ class Parameters():
         self.vis_shape = (800, 600)
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-        self.model="/home/lcarnevale/Documents/university/project-data/2023__paper-edge_cloud_orchestrator/source/mftnakrsu/Automatic_Number_Plate_Recognition_YOLO_OCR/model/best.pt"
+        # self.model="/home/lcarnevale/Documents/university/project-data/2023__paper-edge_cloud_orchestrator/source/mftnakrsu/Automatic_Number_Plate_Recognition_YOLO_OCR/model/best.pt"
+        self.model = model_path

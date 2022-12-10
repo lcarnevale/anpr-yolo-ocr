@@ -19,17 +19,6 @@ from threading import Lock
 from logic.writer import Writer
 from logic.reader import Reader
 
-def get_frame(filename):
-    """ Read image from file using opencv.
-
-        Args:
-            filename(str): relative or absolute path of the image
-
-        Returns:
-            (numpy.ndarray) frame read from file 
-    """
-    return cv2.imread(filename)
-
 def main():
     description = ('%s\n%s' % (__author__, __description__))
     epilog = ('%s\n%s' % (__credits__, __copyright__))
@@ -59,19 +48,21 @@ def main():
     if not os.path.exists(logdir_name):
         os.makedirs(logdir_name)
 
-    writer = setup_writer(config['restful'], mutex, verbosity, logging_path)
-    # reader = setup_reader(config['detection'], mutex, verbosity, logging_path)
+    writer = setup_writer(config['restful'], config['static_files'], mutex, verbosity, logging_path)
+    reader = setup_reader(config['detection'], config['static_files'], mutex, verbosity, logging_path)
     writer.start()
-    # reader.start()
+    reader.start()
 
-def setup_writer(config, mutex, verbosity, logging_path):
+def setup_writer(config, config_files, mutex, verbosity, logging_path):
     writer = Writer(config['host'], config['port'],
-        config['static_files'], mutex, verbosity, logging_path)
+        config_files['potential'], mutex, verbosity, logging_path)
     writer.setup()
     return writer
 
-def setup_reader(config, mutex, verbosity):
-    pass
+def setup_reader(config, config_files, mutex, verbosity, logging_path):
+    reader = Reader(config_files['potential'], config_files['detected'], config['model_path'], mutex, verbosity, logging_path)
+    reader.setup()
+    return reader
 
 if __name__ == '__main__':
     main()
