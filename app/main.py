@@ -1,6 +1,23 @@
-import cv2
-from ai.ai_model import load_yolov5_model
-from ai.ai_model import detection
+# -*- coding: utf-8 -*-
+#!/usr/bin/env python
+
+"""License Plate Detection
+This implementation does its best to follow the Robert Martin's Clean code guidelines.
+The comments follows the Google Python Style Guide:
+    https://github.com/google/styleguide/blob/gh-pages/pyguide.md
+"""
+
+__copyright__ = 'Copyright 2023, FCRlab at University of Messina'
+__author__ = 'Lorenzo Carnevale <lcarnevale@unime.it>'
+__credits__ = ''
+__description__ = 'License Plate Detection'
+
+import os
+import yaml
+import argparse
+from threading import Lock
+from logic.writer import Writer
+from logic.reader import Reader
 
 def get_frame(filename):
     """ Read image from file using opencv.
@@ -14,14 +31,47 @@ def get_frame(filename):
     return cv2.imread(filename)
 
 def main():
-    model, labels = load_yolov5_model() # loading model and labels
-    frame =  get_frame('../test.jpg')
+    description = ('%s\n%s' % (__author__, __description__))
+    epilog = ('%s\n%s' % (__credits__, __copyright__))
+    parser = argparse.ArgumentParser(
+        description = description,
+        epilog = epilog
+    )
 
-    detected, _ = detection(frame, model, labels)
+    parser.add_argument('-c', '--config',
+                        dest='config',
+                        help='YAML configuration file',
+                        type=str,
+                        required=True)
 
-    from PIL import Image
-    im = Image.fromarray(detected)
-    im.save("../your_file.jpeg")
+    parser.add_argument('-v', '--verbosity',
+                        dest='verbosity',
+                        help='Logging verbosity level',
+                        action="store_true")
+
+    options = parser.parse_args()
+    verbosity = options.verbosity
+    mutex = Lock()
+    with open(options.config) as f:
+        config = yaml.load(f, Loader=yaml.FullLoader)
+    logdir_name = config['logging']['logging_folder']
+    logging_path = '%s/%s' % (config['logging']['logging_folder'], config['logging']['logging_filename'])
+    if not os.path.exists(logdir_name):
+        os.makedirs(logdir_name)
+
+    writer = setup_writer(config['restful'], mutex, verbosity, logging_path)
+    # reader = setup_reader(config['detection'], mutex, verbosity, logging_path)
+    writer.start()
+    # reader.start()
+
+def setup_writer(config, mutex, verbosity, logging_path):
+    writer = Writer(config['host'], config['port'],
+        config['static_files'], mutex, verbosity, logging_path)
+    writer.setup()
+    return writer
+
+def setup_reader(config, mutex, verbosity):
+    pass
 
 if __name__ == '__main__':
     main()
