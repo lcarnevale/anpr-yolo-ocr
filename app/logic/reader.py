@@ -57,17 +57,22 @@ class Reader:
 
     def __reader_job(self):
         while True:
+            # If the folder is not empty it acquire the mutex to safely access the dir
             if not self.__potential_folder_is_empty():
                 self.__mutex.acquire()
                 oldest_frame_path = self.__oldest()
 
+                # Picking the oldest frame
                 frame =  self.__get_frame(oldest_frame_path)
 
+                # Storing the output and label
                 detected, _ = self.__detection(frame, self.__model, self.__labels)
                 os.remove(oldest_frame_path)
 
+                # Releasing the mutex
                 self.__mutex.release()
 
+                # Saving the processed image
                 image = Image.fromarray(detected)
                 filename = os.path.basename(oldest_frame_path)
                 absolute_path = '%s/%s' % (self.__static_files_detection, filename)
@@ -208,6 +213,5 @@ class Reader:
 
         return out, label
 
-    
     def start(self):
         self.__reader.start()

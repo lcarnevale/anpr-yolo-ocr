@@ -20,8 +20,7 @@ from flask import Flask, request, make_response
 from werkzeug.utils import secure_filename
 
 class Writer:
-    """
-    """
+
     __ALLOWED_EXTENSIONS = {
         'png',
         'jpg',
@@ -46,11 +45,12 @@ class Writer:
             level = logging.DEBUG
         logging.basicConfig(filename=filename, filemode='a', format=format, level=level, datefmt=datefmt)
 
-
     def setup(self):
+        # Creating the static files folder if not existing
         if not os.path.exists(self.__static_files):
             os.makedirs(self.__static_files)
 
+        # Creating a Thread to execute writer_job function
         self.__writer = threading.Thread(
             target = self.__writer_job, 
             args = (self.__host, self.__port, self.__verbosity)
@@ -59,8 +59,11 @@ class Writer:
     def __writer_job(self, host, port, verbosity):
         app = Flask(__name__)
 
+        # Adding the API endpoint, the frame-upload function will be executed after send a POST request
         app.add_url_rule('/api/v1/frame-upload', 'frame-upload', self.__frame_upload, methods=['POST'])
         print(host, port)
+
+        # Starting the Flask Server on 0.0.0.0, it will listen all direction
         app.run(host=host, port=port, debug=verbosity, threaded=True, use_reloader=False)
 
 
@@ -69,6 +72,8 @@ class Writer:
             if 'upload' not in request.files:
                 response = make_response("File not found", status.HTTP_400_BAD_REQUEST)
             file = request.files['upload']
+            
+            # If file is allowed it acquires the mutex to write safely into the dir and save the frame into the static folder
             if file and self.__allowed_file(file.filename):
                 filename = secure_filename(file.filename)
                 absolute_path = '%s/%s' % (self.__static_files, filename)

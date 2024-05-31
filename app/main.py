@@ -43,13 +43,18 @@ def main():
     mutex = Lock()
     with open(options.config) as f:
         config = yaml.load(f, Loader=yaml.FullLoader)
+    
+    # Setup of logs folder    
     logdir_name = config['logging']['logging_folder']
     logging_path = '%s/%s' % (config['logging']['logging_folder'], config['logging']['logging_filename'])
     if not os.path.exists(logdir_name):
         os.makedirs(logdir_name)
 
+    # Writer and reader setup
     writer = setup_writer(config['restful'], config['static_files'], mutex, verbosity, logging_path)
     reader = setup_reader(config['detection'], config['static_files'], mutex, verbosity, logging_path)
+    
+    # Starting writer and reader
     writer.start()
     reader.start()
 

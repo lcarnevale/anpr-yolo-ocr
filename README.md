@@ -7,6 +7,12 @@
 This repository forks the [Automatic_Number_Plate_Recognition_YOLO_OCR
 ](https://github.com/mftnakrsu/Automatic_Number_Plate_Recognition_YOLO_OCR) one by [mftnakrsu](https://github.com/mftnakrsu) to extract the license plate detection methods and create a microservices deployable as Docker containers.
 
+## Dataset
+
+The dataset used in the dataset folder for license plate detection:
+
+https://www.kaggle.com/datasets/andrewmvd/car-plate-detection
+
 ## How to build
 
 Build the image using the Docker command.
