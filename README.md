@@ -45,7 +45,7 @@ chmod +x run.sh
 The current output folder is the following:
 
 ```bash
-static-files/detected-license-plate
+cd static-files/detected-license-plate
 ```
 
 ## How to read the logs
