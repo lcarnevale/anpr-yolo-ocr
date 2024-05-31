@@ -27,7 +27,7 @@ COPY requirements.txt /opt/app/requirements.txt
 WORKDIR /opt/app
 
 # Installazione delle dipendenze di sistema e dei pacchetti Python
-RUN echo "|--> Install dependencies"; \
+RUN echo "|--> Installing dependencies"; \
     apt install -y libgl1 libglib2.0-0 && \
     /opt/venv/bin/pip install -r requirements.txt
 
@@ -36,6 +36,9 @@ COPY app /opt/app
 
 # Impostazione dell'ambiente PATH per utilizzare l'ambiente virtuale
 ENV PATH="/opt/venv/bin:$PATH"
+
+# Impostazione della variabile d'ambiente per abilitare l'hotreload
+ENV FLASK_ENV=development
 
 # Esposizione della porta 8080
 EXPOSE 8080
