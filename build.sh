@@ -1,1 +1,2 @@
-docker build -t lcarnevale/platedetection .
+# Building the docker image
+docker build -t platedetection .

@@ -1,6 +1,6 @@
 FROM ubuntu:latest
 
-LABEL maintainer="Lorenzo Carnevale <lcarnevale@unime.it>" \
+LABEL maintainer="Davide Ferara <frrdvd98m07h224l@studenti.unime.it>, Lorenzo Carnevale <lcarnevale@unime.it>" \
       name="Plate Detection Microservice" \
       description="Docker container for running a plate detection microservice" \
       vendor="University of Messina" \
@@ -11,11 +11,10 @@ RUN echo "|--> Updating"; \
     apt update -y && apt upgrade -y && \
     apt install -y software-properties-common
 
-# Aggiunta del repository deadsnakes PPA per Python 3.10
-RUN add-apt-repository ppa:deadsnakes/ppa && apt update -y
-
-# Installazione di Python 3.10, pip e venv
-RUN apt install -y python3.10 python3-pip python3.10-venv
+# Aggiunta del repository deadsnakes PPA per Python 3.10 e installazione di Python 3.10, pip e venv
+RUN echo "|--> Installing Python"; \
+    add-apt-repository ppa:deadsnakes/ppa && apt update -y && \
+    apt install -y python3.10 python3-pip python3.10-venv
 
 # Creazione di un ambiente virtuale e aggiornamento di pip
 RUN python3.10 -m venv /opt/venv && \
