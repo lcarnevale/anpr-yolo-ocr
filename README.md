@@ -8,19 +8,24 @@ This repository forks the [Automatic_Number_Plate_Recognition_YOLO_OCR
 ](https://github.com/mftnakrsu/Automatic_Number_Plate_Recognition_YOLO_OCR) one by [mftnakrsu](https://github.com/mftnakrsu) to extract the license plate detection methods and create a microservices deployable as Docker containers.
 
 ## How to build
+
 Build the image using the Docker command.
+
 ```bash
 docker build -t lcarnevale/platedetection .
 ```
 
-Alternativelly, use the *build.sh* script.
+Alternativelly, use the _build.sh_ script.
+
 ```bash
 chmod +x build.sh
 ./build.sh
 ```
 
 ## How to run
+
 Run the image as following.
+
 ```bash
 docker run -d --name platedetection \
     -v /var/log/platedetection:/opt/app/log \
@@ -28,14 +33,25 @@ docker run -d --name platedetection \
     lcarnevale/platedetection
 ```
 
-Alternativelly, use the *run.sh* script.
+Alternativelly, use the _run.sh_ script.
+
 ```bash
 chmod +x run.sh
 ./run.sh
 ```
 
+## Output folder
+
+The current output folder is the following:
+
+```bash
+static-files/detected-license-plate
+```
+
 ## How to read the logs
+
 The filename is custom and it can be modified in the configuration file.
+
 ```bash
 tail -f /var/log/lcarnevale/license-plate-detection.log
 ```
