@@ -1,0 +1,8 @@
+restful:
+  host: 0.0.0.0
+  port: 5000
+logging:
+  logging_folder: 'log'
+  logging_filename: api-gateway.log
+static_files:
+  potential: 'static-files/potential-license-plate'

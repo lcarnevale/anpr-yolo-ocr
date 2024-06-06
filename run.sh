@@ -1,6 +1,4 @@
-docker run -d --name platedetection \
-    -p 8080:8080 \
-    -v /var/log/platedetection:/opt/app/log \
-    -v ~/static-files:/opt/app/static-files \
-    -v $(pwd)/app:/opt/app \
-    platedetection
+cmhod +x build.sh
+./build.sh
+
+docker compose up -d 

@@ -1,0 +1,32 @@
+/* Dark Mode */
+body {
+  display: flex; /* Utilizza il flexbox per centrare il contenuto */
+  justify-content: center; /* Centra il contenuto orizzontalmente */
+  align-items: center; /* Centra il contenuto verticalmente */
+  height: 100vh; /* Imposta l'altezza del body al 100% della viewport */
+  background-color: #1a1a1a; /* colore di sfondo scuro */
+  color: #e0e0e0; /* colore del testo bianco */
+}
+
+.form-signin {
+  max-width: 400px; /* Imposta la larghezza massima del form a 400px */
+  padding: 20px; /* Aggiunge spazio interno al form */
+  background-color: #333; /* colore di sfondo del form */
+  border: 1px solid #444; /* bordo del form */
+  border-radius: 10px; /* bordi arrotondati */
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5); /* ombra */
+}
+
+.form-signin .form-control {
+  background-color: #444; /* colore di sfondo dei campi del form */
+  color: #e0e0e0; /* colore del testo dei campi del form */
+  border: 1px solid #555; /* bordo dei campi del form */
+  border-radius: 5px; /* bordi arrotondati */
+  box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.5); /* ombra interna */
+}
+
+/* Stile figo aggiuntivo */
+.form-signin h1 {
+  color: #e0e0e0; /* colore del titolo */
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5); /* ombra del testo */
+}
