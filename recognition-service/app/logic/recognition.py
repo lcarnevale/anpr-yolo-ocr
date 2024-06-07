@@ -54,7 +54,7 @@ class Recognition:
     def __write_to_csv(self, csv_path, data):
         logging.info(f"Received CSV results at {csv_path}...")
 
-        time.sleep(2)
+        time.sleep(1)
 
         logging.info("Finished writing into CSV!")
 
@@ -69,7 +69,7 @@ class Recognition:
     def __detection_thread(self, potential_frame, detection_event, detection_result, recognition_event, recognition_result):
         logging.info("Detection started!")
         
-        time.sleep(5)
+        time.sleep(1)
         detected_frame = 'detected_plate.jpg'
 
         recognition_thread = threading.Thread(target=self.__recognition_thread, args=(detected_frame, recognition_event, recognition_result))
@@ -83,7 +83,7 @@ class Recognition:
     def __download_thread(self, potential_frame, detection_event, detection_result, recognition_event, recognition_result):
         logging.info("Downloading frame...")
 
-        time.sleep(3)
+        time.sleep(1)
 
         detection_thread = threading.Thread(target=self.__detection_thread, args=(potential_frame, detection_event, detection_result, recognition_event, recognition_result))
         detection_thread.start()
@@ -127,14 +127,3 @@ class Recognition:
     def start(self):
         """Start the Flask recognition."""
         self.__recognition.run(host=self.__host, port=self.__port, debug=self.__verbosity, threaded=True, use_reloader=True)
-
-if __name__ == '__main__':
-    host = '0.0.0.0'
-    port = 5001
-    static_files = './static'
-    mutex = threading.Lock()
-    verbosity = True
-    logging_path = './recognition.log'
-    recognition = Recognition(host, port, static_files, mutex, verbosity, logging_path)
-    recognition.setup()
-    recognition.start()

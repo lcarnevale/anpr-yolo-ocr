@@ -10,7 +10,7 @@ import os
 import logging
 from threading import Lock
 import requests
-from flask import Flask, request, make_response, render_template, redirect, jsonify
+from flask import Flask, request, make_response, render_template, redirect, jsonify, url_for
 from flask_api import status
 from werkzeug.utils import secure_filename
 
@@ -80,18 +80,22 @@ class App:
         @self.__app.route('/', methods=['GET'])
         def home():
             return render_template('web/index.html')
-
+        
+        @self.__app.route('/result', methods=['GET'])
+        def result_page():
+            return render_template('web/result.html', **request.args)
+        
         @self.__app.route('/api/v1/frame-upload', methods=['POST'])
         def upload_file():
             logging.info("Uploading frame...")
 
             if 'frame-upload' not in request.files:
-                return make_response("No file part", status.HTTP_400_BAD_REQUEST)
+                return make_response("No file part\n", status.HTTP_400_BAD_REQUEST)
             
             file = request.files['frame-upload']
             
             if file.filename == '':
-                return make_response("No selected file", status.HTTP_400_BAD_REQUEST)
+                return make_response("No selected file\n", status.HTTP_400_BAD_REQUEST)
             
             if file and self.__allowed_file(file.filename):
                 filename = secure_filename(file.filename)
@@ -103,13 +107,15 @@ class App:
                     self.__mutex.release()
 
                 result = self.__call_recognition_service()
-                
+
                 if result is None:
+                    logging.error("Recognition service returned an error")
                     return make_response("Error calling recognition service", status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-                return make_response(jsonify(result), status.HTTP_201_CREATED)
+                logging.info(f"Recognition service response: {result}")
+                return redirect(url_for('result_page', **result))  # Redirect to result page with result data
             else:
-                return make_response("File type not allowed", status.HTTP_400_BAD_REQUEST)
+                return make_response("File type not allowed\n", status.HTTP_400_BAD_REQUEST)
 
     def start(self):
         """Start the Flask app."""

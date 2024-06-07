@@ -5,30 +5,23 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <link rel="stylesheet" href="//stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
-    <style>
-      .bd-placeholder-img {
-        font-size: 1.125rem;
-        text-anchor: middle;
-      }
-
-      @media (min-width: 768px) {
-        .bd-placeholder-img-lg {
-          font-size: 3.5rem;
-        }
-      }
-    </style>
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/style.css') }}">
     <title>Automatic Plate Detection</title>
   </head>
   <body class="text-center">
+    
+  <div class="container">
+    <h1 class="h1 mb-1 font-weight-normal">Automatic Plate Detection</h1>
     
     <form class="form-signin" method=post enctype=multipart/form-data action="/api/v1/frame-upload">
         <h1 class="h3 mb-3 font-weight-normal">Choose a car image:</h1>
         <input type="file" name="frame-upload" class="form-control-file" id="inputfile">
         <br/>
         <button class="btn btn-lg btn-primary btn-block" type="submit">Start detection</button>
-        <p class="mt-5 mb-3 text-muted">Built for Virtualizzation Project</p>
-    </form>
+        <p class="mt-5 mb-3 text-muted">Built for Virtualization Project</p>
+    </form>    
+  </div>
+
 
     <script src="//code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js" integrity="sha384-wHAiFfRlMFy6i5SRaxvfOCifBUQy1xHdJ/yoi7FRNXMRBu5WHdZYu1hA6ZOblgut" crossorigin="anonymous"></script>

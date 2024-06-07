@@ -8,6 +8,10 @@ body {
   color: #e0e0e0; /* colore del testo bianco */
 }
 
+.card {
+  background-color: #444;
+}
+
 .form-signin {
   max-width: 400px; /* Imposta la larghezza massima del form a 400px */
   padding: 20px; /* Aggiunge spazio interno al form */
@@ -15,6 +19,7 @@ body {
   border: 1px solid #444; /* bordo del form */
   border-radius: 10px; /* bordi arrotondati */
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.5); /* ombra */
+  margin: auto;
 }
 
 .form-signin .form-control {
@@ -29,4 +34,15 @@ body {
 .form-signin h1 {
   color: #e0e0e0; /* colore del titolo */
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5); /* ombra del testo */
+}
+
+.bd-placeholder-img {
+  font-size: 1.125rem;
+  text-anchor: middle;
+}
+
+@media (min-width: 768px) {
+  .bd-placeholder-img-lg {
+    font-size: 3.5rem;
+  }
 }
