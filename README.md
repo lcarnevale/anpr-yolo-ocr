@@ -1,41 +1,124 @@
-# License Plate Detection - Microservices
+# Automatic Number Plate Recognition
 
-![license-plate-image](docs/license-plate.jpg)
+![dataset-cover](https://user-images.githubusercontent.com/57320216/166916670-03dfabe1-8c6c-471a-875c-8715354aa957.jpg)
 
-**Automatic Number Plate Recognition** (ANPR) is the process of reading the characters on the plate with various **optical character recognition** (OCR) methods by separating the plate region on the vehicle image obtained from automatic plate recognition.
+**Automatic Number Plate Recognition (ANPR)** is the process of reading the characters on the plate with various optical character recognition (OCR) methods by separating the plate region on the vehicle image obtained from automatic plate recognition.
 
-This repository forks the [Automatic_Number_Plate_Recognition_YOLO_OCR
-](https://github.com/mftnakrsu/Automatic_Number_Plate_Recognition_YOLO_OCR) one by [mftnakrsu](https://github.com/mftnakrsu) to extract the license plate detection methods and create a microservices deployable as Docker containers.
+## Table of Content
 
-## How to build
-Build the image using the Docker command.
-```bash
-docker build -t lcarnevale/platedetection .
-```
+- [Automatic Number Plate Recognition](#automatic-number-plate-recognition)
 
-Alternativelly, use the *build.sh* script.
-```bash
-chmod +x build.sh
-./build.sh
-```
+  - [What will you learn this project ](#what-will-you-learn-this-project)
+  - [Dataset](#dataset)
+  - [Installation](#installation)
+  - [Usage](#usage)
+  - [Project architecture](#project-architecture)
+  - [Some Result](#some-result)
+  - [Source](#source)
+  - [Licence](#licence)
 
-## How to run
-Run the image as following.
-```bash
-docker run -d --name platedetection \
-    -v /var/log/platedetection:/opt/app/log \
-    -v ~/static-files:/opt/app/static-files \
-    lcarnevale/platedetection
-```
+## What will you learn this project
 
-Alternativelly, use the *run.sh* script.
-```bash
-chmod +x run.sh
-./run.sh
-```
+- Custom Object Detection
+- Scene Text Detection
+- Scene Text Recognation
+- Optic Character Recognation
+- EasyOCR, PaddleOCR
+- Database,CSV format
+- Applying project in Real Time
+- Flask
 
-## How to read the logs
-The filename is custom and it can be modified in the configuration file.
-```bash
-tail -f /var/log/lcarnevale/license-plate-detection.log
-```
+## Dataset
+
+The dataset I use for license plate detection:
+
+https://www.kaggle.com/datasets/andrewmvd/car-plate-detection
+
+## Installation
+
+Clone repo and install requirements.txt in a Python>=3.7.0 environment.
+
+    git clone https://github.com/mftnakrsu/Automatic-number-plate-recognition-YOLO-OCR.git  # clone
+    cd Automatic-number-plate-recognition-YOLO-OCR
+    pip install -r requirements.txt  # install
+
+## Usage
+
+After the req libraries are installed, you can run the project by main.py.
+
+    python main.py
+
+## Project architecture
+
+The pipeline in the project is as follows:
+
+![images](https://github.com/mftnakrsu/Automatic-number-plate-recognition-YOLO-OCR/blob/main/imgs/flowchart.png)
+
+- Custom object detection with plate extraction using yolov5
+- Apply the extracted plate to EasyOCR and PaddleOCR
+- Get plate text
+- Filter text
+- Write Database and CSV format
+- Upload to Flask
+
+## Some Result
+
+- As you can see, first step is detect the plate with using Yolov5.
+
+![images](https://github.com/mftnakrsu/Automatic-number-plate-recognition-YOLO-OCR/blob/main/imgs/realtime.png)
+
+- After detect plate, apply the ocr. Paddle ocr Easy ocr for recognizing plate.
+
+![images](https://github.com/mftnakrsu/Automatic-number-plate-recognition-YOLO-OCR/blob/main/imgs/plate_recog.jpg)
+
+- Then write csv or database, when put it all in one.
+
+![images](https://github.com/mftnakrsu/Automatic-number-plate-recognition-YOLO-OCR/blob/main/imgs/all.png)
+
+- The last step is Flask :) Actually, I didn't have time to integrate all the code in Flask. I just uploaded the yolov5 part. If you do, don't forget to pull request :)
+
+![images](https://github.com/mftnakrsu/Automatic-number-plate-recognition-YOLO-OCR/blob/main/imgs/flask_test.png)
+
+## Similar work
+
+A streamlit based implementation of Automatic Number Plate Recognition for cars and other vehicles using images or live camera feed.
+
+![Animation](https://user-images.githubusercontent.com/29462447/168389056-9f39b89d-1221-432b-878d-578d9114d466.gif)
+![live feed demo](https://user-images.githubusercontent.com/29462447/168389042-c06f3dd2-5047-4138-8c11-07372d63046a.gif)
+
+The entire code for the webapp can be found [here.](https://github.com/prateekralhan/Streamlit-based-Automatic-Number-Plate-Recognition)
+
+## Source
+
+- https://docs.python.org/3/library/csv.html
+- https://github.com/ultralytics/yolov5
+- https://github.com/PaddlePaddle/PaddleOCR
+- https://medium.com/move-on-ai/yolov5-object-detection-with-your-own-dataset-6e3823a8f66b
+- https://github.com/JaidedAI/EasyOCR
+-     https://www.researchgate.net/publication/319198085_License_Number_Plate_Recognition_System_using_Entropy_basedFeatures_Selection_Approach_with_SVM/figures?lo=1&utm_source=google&utm_medium=organic
+
+## Licence
+
+[MIT](https://github.com/mftnakrsu/Automatic-number-plate-recognition-YOLO-OCR/blob/main/LICENSE)
+
+## To Do
+
+- [ ] use fcaykon pip yolo instead of hardcoded yolo files
+- [ ] hugging face
+
+version: '3.8'
+services:
+plate-detection-service:
+build: ./plate-detection-service
+ports: - '5001:5001'
+
+text-recognition-service:
+build: ./text-recognition-service
+ports: - '5002:5002'
+
+api-gateway-service:
+build: ./api-gateway-service
+command: python3 main.py -c config.yaml -v
+volumes: - /app:/opt/app - /app/static-files:/opt/app/static-files - /var/log/platedetection:/opt/app/log
+ports: - '5000:5000'
+depends_on: - plate-detection-service - text-recognition-service

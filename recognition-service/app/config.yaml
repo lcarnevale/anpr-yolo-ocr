@@ -1,0 +1,13 @@
+restful:
+  host: 0.0.0.0
+  port: 5001
+logging:
+  logging_folder: 'log'
+  logging_filename: recognition-service.log
+static_files:
+  potential: 'static-files/potential-license-plate'
+  detected: 'static-files/detected-license-plate'
+  cropped: 'static-files/cropped-license-plate'
+results:
+  results_folder: 'results'
+  results_filename: 'results.csv'
