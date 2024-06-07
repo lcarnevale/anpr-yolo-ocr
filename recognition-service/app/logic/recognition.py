@@ -6,124 +6,179 @@ __author__ = 'Lorenzo Carnevale <lcarnevale@unime.it>'
 __credits__ = ''
 __description__ = 'Recognition class'
 
-import os
 import logging
 import threading
-import time
+import os
+import uuid
+import cv2
+import torch
+
 from flask import Flask, request, make_response, jsonify
 from flask_api import status
+from werkzeug.utils import secure_filename
 
-class Recognition:
-    """A class used to represent the Flask recognitionlication."""
+from PIL import Image
+from ai.ai_model import detection as detection, load_yolov5_model
+from ai.ocr_model import pytesseract_model_works, easyocr_model_works, easyocr_model_load
+from helper.general_utils import save_results
 
-    def __init__(self, host, port, static_files, mutex, verbosity, logging_path) -> None:
-        """
-        Initialize the Recognition class with the specified parameters.
+# Load YOLOv5 model
+model_yolo, labels = load_yolov5_model()
 
-        Args:
-            host (str): The host on which the Flask recognition will run.
-            port (int): The port on which the Flask recognition will run.
-            static_files (str): The path to the static files.
-            mutex (threading.Lock): A mutex for thread-safe operations.
-            verbosity (bool): The verbosity level for logging.
-            logging_path (str): The path to the log file.
-        """
-        self.__recognition = Flask(__name__)
-        self.__host = host
-        self.__port = port
-        self.__verbosity = verbosity
-        self.__setup_logging(verbosity, logging_path)
+# Configure YOLOv5 model
+model = torch.hub.load(
+    "ultralytics/yolov5", "custom", path="model/best.pt", force_reload=True
+)
+model.eval()
+model.conf = 0.5
+model.iou = 0.45
+#Easy OCR text reader 
+ocr_text_reader = easyocr_model_load()
 
-        self.__static_files = static_files
-        self.__csv_path = os.path.join(static_files, 'results.csv')
-        self.__mutex = mutex
+class RecognitionService:
 
-    def __setup_logging(self, verbosity, path):
-        """
-        Setup logging for the recognitionlication.
+    __ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
 
-        Args:
-            verbosity (bool): The verbosity level for logging.
-            path (str): The path to the log file.
-        """
-        format = "%(asctime)s %(filename)s:%(lineno)d %(levelname)s - %(message)s"
-        datefmt = "%d/%m/%Y %H:%M:%S"
-        level = logging.DEBUG if verbosity else logging.INFO
-        logging.basicConfig(filename=path, filemode='a', format=format, level=level, datefmt=datefmt)
+    def __init__(self, host, port, static_files_path, detected_frames_path, cropped_frames_path, results_path, results_filename, mutex, verbosity, logging_path):
+        self.app = Flask(__name__)
+        self.host = host
+        self.port = port
+        self.verbosity = verbosity
+        self.logging_path = logging_path
+        self.setup_logging(verbosity, logging_path)
+        self.results_path = results_path
+        self.results_filename = results_filename
+        self.static_files_path = static_files_path
+        self.detected_frames_path = detected_frames_path
+        self.cropped_frames_path = cropped_frames_path
+        self.mutex = mutex
 
-    def __write_to_csv(self, csv_path, data):
-        logging.info(f"Received CSV results at {csv_path}...")
+    def setup_logging(self, verbosity, log_file_path):
+        log_format = "%(asctime)s %(filename)s:%(lineno)d %(levelname)s - %(message)s"
+        date_format = "%d/%m/%Y %H:%M:%S"
+        log_level = logging.DEBUG if verbosity else logging.INFO
+        logging.basicConfig(filename=log_file_path, filemode='a', format=log_format, level=log_level, datefmt=date_format)
 
-        time.sleep(1)
+    def is_allowed_file(self, filename):
+        return '.' in filename and filename.rsplit('.', 1)[1].lower() in self.__ALLOWED_EXTENSIONS
 
-        logging.info("Finished writing into CSV!")
+    def read_image(self, filename):
+        return cv2.imread(filename)
 
-    def __recognition_thread(self, detected_frame, recognition_event, recognition_result):
-        logging.info("Recognition started!")
-        
-        # Simulate OCR recognition
-        time.sleep(3)
-        recognition_result['result'] = 'XYZ1234'
-        recognition_event.set()
+    def perform_ocr(self, cropped_frame_path, ocr_event, ocr_result):
+        logging.info("OCR recognition started!")
+        logging.info(f"Received cropped frame {cropped_frame_path}")
 
-    def __detection_thread(self, potential_frame, detection_event, detection_result, recognition_event, recognition_result):
+        frames = [cropped_frame_path]
+        predictions = pytesseract_model_works(frames, False)
+
+        test = easyocr_model_works(ocr_text_reader, frames, False)
+
+        logging.info(f"Detected plate number {predictions} and {test}")
+
+        ocr_result['result'] = predictions[0].strip() if predictions else None
+        ocr_event.set()
+
+    def perform_detection(self, potential_frame_path, detection_event, detection_result, ocr_event, ocr_result, unique_id):
         logging.info("Detection started!")
-        
-        time.sleep(1)
-        detected_frame = 'detected_plate.jpg'
 
-        recognition_thread = threading.Thread(target=self.__recognition_thread, args=(detected_frame, recognition_event, recognition_result))
-        recognition_thread.start()
-        logging.info("Waiting for recognition thread to end...")
+        frame = self.read_image(potential_frame_path)
 
-        recognition_event.wait()
-        detection_result['result'] = detected_frame
+        if frame is not None:
+            logging.info("Detecting image...!")
+            detected_plate, detected_plate_cropped = detection(frame, model_yolo, labels)
+
+            if detected_plate_cropped is not None:
+                detected_filename = f"{unique_id}_detected.jpg"
+                detected_frame_path = os.path.join(self.detected_frames_path, detected_filename)
+                detected_plate_image = Image.fromarray(detected_plate)
+                detected_plate_image.save(detected_frame_path, format="JPEG")
+
+                cropped_filename = f"{unique_id}_cropped.jpg"
+                cropped_frame_path = os.path.join(self.cropped_frames_path, cropped_filename)
+                detected_plate_cropped_image = Image.fromarray(detected_plate_cropped)
+                detected_plate_cropped_image.save(cropped_frame_path, format="JPEG")
+
+                ocr_thread = threading.Thread(target=self.perform_ocr, args=(cropped_frame_path, ocr_event, ocr_result))
+                ocr_thread.start()
+                logging.info("Waiting for OCR thread to complete...")
+
+                ocr_event.wait()
+                detection_result['result'] = detected_frame_path
+            else:
+                logging.error("No plate detected, detection failed!")
+                detection_result['result'] = None
+        else:
+            logging.error("Frame is None, detection failed!")
+            detection_result['result'] = None
+
         detection_event.set()
 
-    def __download_thread(self, potential_frame, detection_event, detection_result, recognition_event, recognition_result):
-        logging.info("Downloading frame...")
 
-        time.sleep(1)
+    def save_potential_frame(self, potential_frame, detection_event, detection_result, ocr_event, ocr_result):
+        logging.info("Saving potential frame...")
 
-        detection_thread = threading.Thread(target=self.__detection_thread, args=(potential_frame, detection_event, detection_result, recognition_event, recognition_result))
-        detection_thread.start()
-        logging.info("Plate detection thread started...")
+        if potential_frame and self.is_allowed_file(potential_frame.filename):
+            unique_id = uuid.uuid4().hex
+            file_extension = secure_filename(potential_frame.filename).rsplit('.', 1)[1].lower()
+            potential_filename = f"{unique_id}_potential.{file_extension}"
+            potential_frame_path = os.path.join(self.static_files_path, potential_filename)
+
+            self.mutex.acquire()
+            try:
+                logging.info(f"Saving potential frame at: {potential_frame_path}")
+                potential_frame.save(potential_frame_path)
+            finally:
+                self.mutex.release()
+
+            detection_thread = threading.Thread(target=self.perform_detection, args=(potential_frame_path, detection_event, detection_result, ocr_event, ocr_result, unique_id))
+            detection_thread.start()
+            logging.info("Detection thread started...")
+        else:
+            logging.error("Invalid file received!")
+            detection_result['result'] = None
+            detection_event.set()
 
         detection_event.wait()
-        logging.info("Detection finished!")
+        logging.info("Detection completed!")
 
-    def setup(self):
-        @self.__recognition.route('/api/v1/frame-download', methods=['POST'])
-        def frame_download():
-            logging.info("POST request received, started detection...")
+    def setup_routes(self):
+        os.makedirs(self.static_files_path, exist_ok=True)
+        os.makedirs(self.detected_frames_path, exist_ok=True)
+        os.makedirs(self.cropped_frames_path, exist_ok=True)
+
+        @self.app.route('/api/v1/frame-download', methods=['POST'])
+        def receive_frame():
+            if request.method != 'POST' or 'potential-frame' not in request.files:
+                return make_response("Not a POST request or 'potential-frame' missing!\n", status.HTTP_400_BAD_REQUEST)
+
+            logging.info("POST request received, starting detection...")
+
+            potential_frame = request.files['potential-frame']
 
             detection_event = threading.Event()
-            recognition_event = threading.Event()
+            ocr_event = threading.Event()
             detection_result = {}
-            recognition_result = {}
+            ocr_result = {}
 
-            # frame_download -> download_thread -> detection_thread -> recognition_thread 
-            time.sleep(3)
-            potential_frame = 'potential_frame.jpeg'
-
-            download_thread = threading.Thread(target=self.__download_thread, args=(potential_frame, detection_event, detection_result, recognition_event, recognition_result))
+            download_thread = threading.Thread(target=self.save_potential_frame, args=(potential_frame, detection_event, detection_result, ocr_event, ocr_result))
             download_thread.start()
-            download_thread.join()  # waiting
+            download_thread.join()
+
+            plate_num = ocr_result.get('result')
 
             logging.info("Building results...")
             results = {
-                "original_plate": potential_frame,
-                "detected_plate": detection_result.get('result'),
-                "plate_number": recognition_result.get('result'),
-                "confidence": "1.0"
+                #"detected_plate": detection_result.get('result'),
+                "plate_number": plate_num
             }
 
-            logging.info("Writing results into CSV file...")
-            self.__write_to_csv(self.__csv_path, results)
-
             logging.info("Returning results!")
+
+            logging.info("Writing result into CSV...")
+            save_results(plate_num, self.results_filename, self.results_path)
+
             return make_response(jsonify(results), status.HTTP_201_CREATED)
 
     def start(self):
-        """Start the Flask recognition."""
-        self.__recognition.run(host=self.__host, port=self.__port, debug=self.__verbosity, threaded=True, use_reloader=True)
+        self.app.run(host=self.host, port=self.port, debug=self.verbosity, threaded=True, use_reloader=True)

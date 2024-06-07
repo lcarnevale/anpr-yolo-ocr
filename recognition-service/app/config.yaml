@@ -7,3 +7,7 @@ logging:
 static_files:
   potential: 'static-files/potential-license-plate'
   detected: 'static-files/detected-license-plate'
+  cropped: 'static-files/cropped-license-plate'
+results:
+  results_folder: 'results'
+  results_filename: 'results.csv'

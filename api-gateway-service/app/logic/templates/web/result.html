@@ -21,36 +21,16 @@
   </head>
   <body class="text-center">
     <div class="container">
-      <h1 class="h3 mb-3 font-weight-normal">Recognition Results</h1>
+      <h1 class="h1 mb-3 font-weight-normal">Recognition Results</h1>
       <div class="card" id="card">
         <div class="card-body">
-          <h5 class="card-title">Original Plate:</h5>
-          <img
-            src="{{ url_for('static', filename=original_plate) }}"
-            class="img-fluid"
-            alt="Original Plate"
-          />
+          <h3 class="card-title">Plate Number:</h3>
+          <p class="card-text display-4">{{ plate_number }}</p>
         </div>
-        <div class="card-body">
-          <h5 class="card-title">Detected Plate:</h5>
-          <img
-            src="{{ url_for('static', filename=detected_plate) }}"
-            class="img-fluid"
-            alt="Detected Plate"
-          />
-        </div>
-        <div class="card-body">
-          <h5 class="card-title">Plate Number:</h5>
-          <p class="card-text">{{ plate_number }}</p>
-        </div>
-        <div class="card-body">
-          <h5 class="card-title">Confidence:</h5>
-          <p class="card-text">{{ confidence }}</p>
-        </div>
+        <a href="/" class="btn btn-lg btn-primary btn-block mt-3"
+          >Upload Another Image</a
+        >
       </div>
-      <a href="/" class="btn btn-lg btn-primary btn-block mt-3"
-        >Upload Another Image</a
-      >
     </div>
     <script
       src="//code.jquery.com/jquery-3.3.1.slim.min.js"

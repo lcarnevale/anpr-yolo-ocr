@@ -15,6 +15,11 @@ COPY requirements.txt /opt/app/requirements.txt
 WORKDIR /opt/app
 
 RUN echo "|--> Installing dependencies"; \
+    apt-get install -y libgl1 libglib2.0-0; \
+    apt-get install -y software-properties-common; \
+    add-apt-repository -y ppa:alex-p/tesseract-ocr; \
+    apt-get update -y; \
+    apt-get install -y tesseract-ocr; \
     pip install -r requirements.txt;
-
+    
 COPY app /opt/app

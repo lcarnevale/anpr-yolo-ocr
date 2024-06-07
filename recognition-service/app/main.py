@@ -17,11 +17,11 @@ import yaml
 import argparse
 import logging
 from threading import Lock
-from logic.recognition import Recognition
+from logic.recognition import RecognitionService
 
 def main():
     """
-    Main function to parse arguments, set up logging, and start the recognition.
+    Main function to parse arguments, set up logging, and start the recognition service.
     """
     description = f'{__author__}\n{__description__}'
     epilog = f'{__credits__}\n{__copyright__}'
@@ -39,16 +39,17 @@ def main():
     
     logdir_name = config['logging']['logging_folder']
     logging_path = os.path.join(logdir_name, config['logging']['logging_filename'])
-    
-    if not os.path.exists(logdir_name):
-        os.makedirs(logdir_name, exist_ok=True)
+    os.makedirs(logdir_name, exist_ok=True)
 
-    recognition = setup_recognition(config['restful'], config['static_files'], mutex, verbosity, logging_path)
-    recognition.start()
+    static_files_path = os.path.join(os.getcwd(), 'static-files')
+    os.system(f"rm -rf {static_files_path}")
 
-def setup_recognition(restful_config, static_files_config, mutex, verbosity, logging_path):
+    recognition_service = setup_recognition_service(config['restful'], config['static_files'], config['results'], mutex, verbosity, logging_path)
+    recognition_service.start()
+
+def setup_recognition_service(restful_config, static_files_config, results_config, mutex, verbosity, logging_path):
     """
-    Set up the Flask recognition.
+    Set up the Flask recognition service.
 
     Args:
         restful_config (dict): Configuration for the RESTful API.
@@ -58,18 +59,22 @@ def setup_recognition(restful_config, static_files_config, mutex, verbosity, log
         logging_path (str): The path to the log file.
 
     Returns:
-        Recognition: The initialized Flask recognition.
+        RecognitionService: The initialized Flask recognition service.
     """
-    recognition = Recognition(
-        host=restful_config['host'],
-        port=restful_config['port'],
-        static_files=static_files_config['potential'],
-        mutex=mutex,
-        verbosity=verbosity,
-        logging_path=logging_path
+    recognition_service = RecognitionService(
+        host = restful_config['host'],
+        port = restful_config['port'],
+        static_files_path = static_files_config['potential'],
+        detected_frames_path = static_files_config['detected'],
+        cropped_frames_path = static_files_config['cropped'],
+        results_path = results_config['results_folder'],
+        results_filename = results_config['results_filename'],
+        mutex = mutex,
+        verbosity = verbosity,
+        logging_path = logging_path
     )
-    recognition.setup()
-    return recognition
+    recognition_service.setup_routes()
+    return recognition_service
 
 if __name__ == '__main__':
     main()

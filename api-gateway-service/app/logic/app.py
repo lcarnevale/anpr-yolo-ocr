@@ -10,7 +10,8 @@ import os
 import logging
 from threading import Lock
 import requests
-from flask import Flask, request, make_response, render_template, redirect, jsonify, url_for
+import json
+from flask import Flask, request, make_response, render_template, redirect, jsonify, url_for, send_from_directory
 from flask_api import status
 from werkzeug.utils import secure_filename
 
@@ -38,6 +39,7 @@ class App:
         self.__verbosity = verbosity
         self.__setup_logging(verbosity, logging_path)
         self.__app = Flask(__name__)
+        self.__app.config['UPLOAD_FOLDER'] = static_files
 
     def __setup_logging(self, verbosity, path):
         """
@@ -64,26 +66,31 @@ class App:
         """
         return '.' in filename and filename.rsplit('.', 1)[1].lower() in self.__ALLOWED_EXTENSIONS
 
-    def __call_recognition_service(self):
+    def __call_recognition_service(self, file_path):
         url = "http://recognition-service:5001/api/v1/frame-download"
         logging.info("Calling recognition service at %s", url)
         try:
-            response = requests.post(url)
-            response.raise_for_status()  # This will raise an HTTPError for bad responses
+            with open(file_path, 'rb') as f:
+                files = {'potential-frame': f}
+                response = requests.post(url, files=files)
+                response.raise_for_status()  # This will raise an HTTPError for bad responses
         except requests.exceptions.RequestException as e:
             logging.error("Error calling recognition service: %s", e)
             return None
         return response.json()
-    
+
     def setup(self):
         """Set up the Flask app with routes and configurations."""
+
         @self.__app.route('/', methods=['GET'])
         def home():
             return render_template('web/index.html')
         
         @self.__app.route('/result', methods=['GET'])
         def result_page():
-            return render_template('web/result.html', **request.args)
+            plate_number = request.args.get('plate_number')
+            detected_plate = request.args.get('detected_plate')
+            return render_template('web/result.html', plate_path=detected_plate, plate_number=plate_number)
         
         @self.__app.route('/api/v1/frame-upload', methods=['POST'])
         def upload_file():
@@ -99,23 +106,29 @@ class App:
             
             if file and self.__allowed_file(file.filename):
                 filename = secure_filename(file.filename)
-                
+                file_path = os.path.join(self.__static_files, filename)
                 self.__mutex.acquire()
                 try:
-                    file.save(os.path.join(self.__static_files, filename))
+                    file.save(file_path)
                 finally:
                     self.__mutex.release()
 
-                result = self.__call_recognition_service()
+                result = self.__call_recognition_service(file_path)
 
                 if result is None:
                     logging.error("Recognition service returned an error")
                     return make_response("Error calling recognition service", status.HTTP_500_INTERNAL_SERVER_ERROR)
 
                 logging.info(f"Recognition service response: {result}")
-                return redirect(url_for('result_page', **result))  # Redirect to result page with result data
+
+                # Pass the JSON result directly to the template
+                return render_template('web/result.html', plate_path=file_path, plate_number=result['plate_number'])
             else:
                 return make_response("File type not allowed\n", status.HTTP_400_BAD_REQUEST)
+
+        @self.__app.route('/static-files/<filename>')
+        def uploaded_file(filename):
+            return send_from_directory(self.__app.config['UPLOAD_FOLDER'], filename)
 
     def start(self):
         """Start the Flask app."""

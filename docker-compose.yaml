@@ -3,22 +3,22 @@ services:
   api-gateway-service:
     container_name: api-gateway-service
     build: ./api-gateway-service
+    image: api-gateway-service
     command: python3 main.py -c config.yaml -v
     volumes:
       - ./api-gateway-service/app:/opt/app
-      - /var/log/platedetection:/opt/app/log
     ports:
       - '5000:5000'
     depends_on:
       - recognition-service
 
   recognition-service:
+    image: recognition-service
     container_name: recognition-service
     build: ./recognition-service
     command: python3 main.py -c config.yaml -v
     volumes:
       - ./recognition-service/app:/opt/app
-      - /var/log/platedetection:/opt/app/log
     ports:
       - '5001:5001'
 

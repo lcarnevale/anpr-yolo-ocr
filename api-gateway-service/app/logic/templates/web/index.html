@@ -37,9 +37,9 @@
           }
 
           let ext = $('#inputfile').val().split('.').pop().toLowerCase();
-          if($.inArray(ext, ['jpg','jpeg']) == -1) {
+          if($.inArray(ext, ['png','jpg','jpeg']) == -1) {
             $("#inputfile").val(null);
-            alert('only jpeg/jpg files are allowed!');
+            alert('only png/jpeg/jpg files are allowed!');
           }
       });
     </script>
